@@ -19,7 +19,6 @@ impl Configuration {
     }
 }
 
-
 #[cfg(test)]
 mod test {
 
