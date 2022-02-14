@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_PASSWORD=admin
+
+networks:
+  default:
+    name: api_net

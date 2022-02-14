@@ -1,0 +1,12 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+postgres = {version = "0.19", features = ["with-uuid-0_8"]}
+sql-builder = "3"
+uuid = "0.8"
+tokio = {version = "1", features = ["full"]}
