@@ -1,0 +1,5 @@
+api:
+  test: "api_test"
+db:
+  url: "postgres://postgres:admin@db:5432/api?sslmode=disable"
+  test: "db_test"

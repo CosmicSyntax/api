@@ -10,3 +10,4 @@ postgres = {version = "0.19", features = ["with-uuid-0_8"]}
 sql-builder = "3"
 uuid = "0.8"
 tokio = {version = "1", features = ["full"]}
+yaml-rust = "0.4"
