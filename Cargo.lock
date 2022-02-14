@@ -9,6 +9,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94a45b455c14666b85fc40a019e8ab9eb75e3a124e05494f5397122bc9eb06e0"
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "postgres",
+ "sql-builder",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "async-trait"
 version = "0.1.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -74,16 +84,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4600d695eb3f6ce1cd44e6e291adceb2cc3ab12f20a33777ecd0bf6eba34e06"
 dependencies = [
  "generic-array",
-]
-
-[[package]]
-name = "db"
-version = "0.1.0"
-dependencies = [
- "postgres",
- "sql-builder",
- "tokio",
- "uuid",
 ]
 
 [[package]]
