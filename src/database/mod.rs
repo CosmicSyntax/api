@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
-use std::sync::Mutex;
 
+use tokio::sync::Mutex;
+use tokio::task::yield_now;
 use tokio_postgres::{Client, Error};
 
 use crate::tls::tls_config;
@@ -32,15 +33,20 @@ impl Psql {
     }
 
     pub async fn set(&self, dbexec: &impl DbExec) {
-        let guard = self.pool.lock();
-        if let Ok(mut c) = guard {
-            let client = c.pop_front();
-            drop(c); // no longer need the mutex
-            let q = dbexec.set();
-            let _ = client.as_ref().unwrap().execute(&q, &[]).await.unwrap();
-            // put the client back into pool
-            let client = client.unwrap();
-            self.pool.lock().unwrap().push_back(client);
+        loop {
+            
+            let guard = self.pool.lock().await.pop_front();
+
+            if let Some(client) = guard {
+                let q = dbexec.set();
+                let _ = client.execute(&q, &[]).await.unwrap();
+                // put the client back into pool
+                self.pool.lock().await.push_back(client);
+                break;
+            } else {
+                yield_now().await;
+                continue;
+            }
         }
     }
 }
@@ -67,6 +73,6 @@ mod test {
         .await
         .unwrap();
         // Check the pool size is correct
-        assert_eq!(pool_size, conn.pool.lock().unwrap().len());
+        assert_eq!(pool_size, conn.pool.lock().await.len());
     }
 }
