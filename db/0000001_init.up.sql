@@ -4,7 +4,7 @@ BEGIN;
 		uuid uuid NOT NULL,
 		created_at timestamp with time zone DEFAULT now() NOT NULL,
 		updated_at timestamp with time zone DEFAULT now() NOT NULL,
-		id integer NOT NULL
+		id serial NOT NULL
 	);
 
 	CREATE SEQUENCE IF NOT EXISTS public.customers_id_seq

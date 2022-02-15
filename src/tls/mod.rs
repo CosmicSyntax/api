@@ -17,7 +17,6 @@ pub(super) fn tls_config() -> rustls::ClientConfig {
     let mut root = rustls::RootCertStore::empty();
     let certs = load_certs(Path::new("./certs/server.crt")).unwrap();
     root.add(&certs[0]).unwrap();
-    println!("... {:?}", root);
     rustls::ClientConfig::builder()
         .with_safe_defaults()
         .with_root_certificates(root)
