@@ -6,7 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-postgres = {version = "0.19", features = ["with-uuid-0_8"]}
+# postgres = "0.19"
+tokio-postgres = "0.7"
 sql-builder = "3"
-uuid = "0.8"
+uuid = {version = "0.8", features = ["v4"]}
 tokio = {version = "1", features = ["full"]}
+yaml-rust = "0.4"
+tokio-rustls = "0.23"
+rustls = "0.20"
+tokio-postgres-rustls = "0.9"
+rustls-pemfile = "0.2"
+chrono = "0.4.19"

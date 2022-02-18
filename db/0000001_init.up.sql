@@ -1,19 +1,19 @@
 BEGIN;
 
 	CREATE TABLE IF NOT EXISTS public.customers (
+		id integer NOT NULL,
 		uuid uuid NOT NULL,
 		created_at timestamp with time zone DEFAULT now() NOT NULL,
-		updated_at timestamp with time zone DEFAULT now() NOT NULL,
-		id integer NOT NULL
+		updated_at timestamp with time zone DEFAULT now() NOT NULL
 	);
 
 	CREATE SEQUENCE IF NOT EXISTS public.customers_id_seq
-		START WITH 1
-		INCREMENT BY 1
+		START WITH 2
+		INCREMENT BY 2
 		NO MINVALUE
 		NO MAXVALUE
 		CACHE 1;
 
-	ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
+	ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq');
 
 COMMIT;
