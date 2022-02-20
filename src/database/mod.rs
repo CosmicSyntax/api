@@ -46,7 +46,6 @@ where
                     if client.execute(&query, &[]).await.is_err() {
                         eprint!("Could not execute instructions");
                     };
-                    println!("Done!");
                 }
             });
             spawn(async move {
@@ -86,8 +85,8 @@ where
                 }
                 drop(egress);
                 for i in handles {
-                    if i.await.is_ok() {
-                        println!("Worker shuttting down")
+                    if i.await.is_err() {
+                        eprintln!("Worker could not shut down")
                     }
                 }
             });

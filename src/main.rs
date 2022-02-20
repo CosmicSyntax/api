@@ -14,14 +14,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let r = manager.start()?;
 
     let start = Utc::now().time();
-    println!("GO!");
     for _ in 0..10000 {
         let customer: Customers = Default::default();
         s.send(customer).await?;
     }
+    drop(s);
+    r.await?;
     let stop = Utc::now().time();
     let diff = stop - start;
     println!("{}", diff.num_seconds());
-    r.await?;
     Ok(())
 }
