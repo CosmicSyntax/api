@@ -23,6 +23,12 @@ impl Customers {
     }
 }
 
+impl Default for Customers {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl database::DbExec<String> for Customers {
     fn set(&self) -> String {
         let query = SqlBuilder::insert_into("customers")

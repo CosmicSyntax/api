@@ -1,9 +1,9 @@
 use tokio::spawn;
+use tokio::sync::mpsc::error::SendError;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::task::JoinHandle;
-use std::error::Error;
 
-use crate::error::ApiErrors;
+use crate::error::{self, ApiErrors};
 
 pub mod models;
 
@@ -54,14 +54,34 @@ where
         ) {
             return Ok(spawn(async move {
                 // Listen for instructions from the sender from main thread
-                while let Some(i) = ingree.recv().await {
-                    drop(i);
+                let mut index = 0;
+                let pool_size = egress.len();
+                while let Some(i) = ingress.recv().await {
+                    // Send the instructions to each worker in a roundrobin fashion
+                    if Self::roundrobin(&egress, &mut index, pool_size, i).await.is_err() {
+                        eprintln!("Could not send instruction to worker.");
+                    }
                 }
-                drop(egress);
                 drop(handles);
-            }))
+            }));
         }
-        Err(ApiErrors::ManagerError("Could not start up manager."))
+        Err(error::MANAGER_START_ERROR)
+    }
+
+    #[inline]
+    async fn roundrobin(
+        pool: &[Sender<T>],
+        index: &mut usize,
+        pool_size: usize,
+        instruct: T,
+    ) -> Result<(), SendError<T>> {
+        let r = pool[*index].send(instruct).await;
+        if *index == pool_size {
+            *index = 0;
+        } else {
+            *index += 1;
+        }
+        r
     }
 }
 
@@ -74,8 +94,7 @@ pub struct Kill;
 
 impl DbExec<()> for Kill {
     // This is the function to kill all the workers
-    fn set(&self) {
-    }
+    fn set(&self) {}
 }
 
 #[cfg(test)]

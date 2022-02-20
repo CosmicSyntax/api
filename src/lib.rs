@@ -1,6 +1,6 @@
 pub mod config;
 pub mod database;
-pub mod tls;
 pub mod error;
+pub mod tls;
 
 pub use config::Configuration;
