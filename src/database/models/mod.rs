@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::database;
 
+#[derive(Debug)]
 pub struct Customers {
     uuid: Uuid,
     created_at: DateTime<Local>,
@@ -29,7 +30,7 @@ impl Default for Customers {
     }
 }
 
-impl database::DbExec<String> for Customers {
+impl database::DbExec for Customers {
     fn set(&self) -> String {
         let query = SqlBuilder::insert_into("customers")
             .field("uuid")
