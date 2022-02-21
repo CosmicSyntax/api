@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use tokio::spawn;
 use tokio::sync::mpsc::error::SendError;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
@@ -9,20 +11,16 @@ use crate::tls::tls_config;
 pub mod models;
 
 #[allow(dead_code)]
-pub struct Manager<T>
-where
-    T: DbExec + Send + 'static,
+pub struct Manager
 {
-    ingress: Option<Receiver<T>>,
+    ingress: Option<Receiver<Box<dyn DbExec + Send>>>,
     handlers: Option<Vec<JoinHandle<()>>>,
-    egress: Option<Vec<Sender<T>>>,
+    egress: Option<Vec<Sender<Box<dyn DbExec + Send>>>>,
 }
 
-impl<T> Manager<T>
-where
-    T: DbExec + Send + 'static,
+impl Manager
 {
-    pub async fn new(recv: Receiver<T>, pool_size: usize, url: &str) -> Self {
+    pub async fn new(recv: Receiver<Box<dyn DbExec + Send>>, pool_size: usize, url: &str) -> Self {
         let mut egress = Vec::with_capacity(pool_size);
         let mut handles = Vec::with_capacity(pool_size);
 
@@ -32,7 +30,7 @@ where
 
         for _ in 0..pool_size {
             // create the channels between manager the its workers
-            let (s, mut r) = channel::<T>(1000);
+            let (s, mut r) = channel::<Box<dyn DbExec + Send>>(1000);
             let (client, conn) = tokio_postgres::connect(url, tls.clone())
                 .await
                 .expect("Could not make connections");
@@ -97,11 +95,11 @@ where
 
     #[inline(always)]
     async fn roundrobin(
-        pool: &[Sender<T>],
+        pool: &[Sender<Box<dyn DbExec + Send>>],
         index: &mut usize,
         pool_size: usize,
-        instruct: T,
-    ) -> Result<(), SendError<T>> {
+        instruct: Box<dyn DbExec + Send>,
+    ) -> Result<(), SendError<Box<dyn DbExec + Send>>> {
         let r = pool[*index].send(instruct).await;
         if *index == (pool_size - 1) {
             *index = 0;
@@ -113,7 +111,7 @@ where
 }
 
 // Trait for executing a SQL commands to postgres
-pub trait DbExec {
+pub trait DbExec: Debug {
     fn set(&self) -> String;
 }
 
