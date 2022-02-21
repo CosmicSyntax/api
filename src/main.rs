@@ -1,33 +1,27 @@
 use std::error::Error;
-use std::sync::Arc;
 
-use api::database::Psql;
+use api::database::models::Customers;
+use api::database::{Manager, DbExec};
+use api::Configuration;
 use chrono::Utc;
+use tokio::sync::mpsc::channel;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let conf = api::Configuration::new("./configs/api.yml").await?;
-    let conn1 = Psql::new(20, conf.0[0]["db"]["url_host"].as_str().unwrap().to_string()).await?;
-    let saf1 = Arc::new(conn1);
+    let conf = Configuration::new("./configs/api.yml").await?;
+    let (s, r) = channel::<Box<dyn DbExec + Send>>(10000);
+    let mut manager = Manager::new(r, 50, conf.0[0]["db"]["url_host"].as_str().unwrap()).await;
+    let r = manager.start()?;
 
-
-    let start = Utc::now();
-
-    let handles1: Vec<_> = (0..2000)
-        .map(|_| {
-            let conn = Arc::clone(&saf1);
-            let customer = api::database::models::Customers::new();
-            tokio::spawn(async move {
-                conn.set(&customer).await;
-            })
-        }).collect();
-
-    for handle in handles1 {
-        handle.await.unwrap();
+    let start = Utc::now().time();
+    for _ in 0..10000 {
+        let customer: Customers = Default::default();
+        s.send(Box::new(customer)).await?;
     }
-
-    let stop = Utc::now();
-    println!("{}", (stop - start).num_milliseconds());
-    
+    drop(s);
+    r.await?;
+    let stop = Utc::now().time();
+    let diff = stop - start;
+    println!("{}", diff.num_seconds());
     Ok(())
 }
