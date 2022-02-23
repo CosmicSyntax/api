@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
 use sql_builder::{quote, SqlBuilder};
+use tokio::spawn;
+use tokio::task::JoinHandle;
+use tokio_postgres::{Error, Client};
 use uuid::Uuid;
 
 use crate::database;
@@ -27,13 +32,17 @@ impl Default for Customers {
 }
 
 impl database::DbExec for Customers {
-    fn set(&self) -> String {
+    fn set(&self, client: Arc<Client>) -> Result<JoinHandle<()>, Error> {
         let query = SqlBuilder::insert_into("customers")
             .field("uuid")
             .values(&[
                 &quote(self.uuid.to_string()),
             ])
             .sql();
-        query.unwrap()
+        let s = query.unwrap();
+        
+        Ok(spawn(async move {
+            client.execute(&s, &[]).await.unwrap();
+        }))
     }
 }
