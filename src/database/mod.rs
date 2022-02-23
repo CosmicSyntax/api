@@ -1,9 +1,11 @@
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use tokio::spawn;
 use tokio::sync::mpsc::error::SendError;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::task::JoinHandle;
+use tokio_postgres::{Error, Client};
 
 use crate::error::{self, ApiErrors};
 use crate::tls::tls_config;
@@ -37,13 +39,15 @@ impl Manager
             // spawn a green thread and send off with r and rkill
             let handle = spawn(async move {
                 // when the receiver is dropped, break out of loop
-                let client = client;
+                let client = Arc::new(client);
                 while let Some(i) = r.recv().await {
                     // placeholder
-                    let query = i.set();
-                    if client.execute(&query, &[]).await.is_err() {
-                        eprint!("Could not execute instructions");
-                    };
+                    let send_client = client.clone();
+                    let handle = i.set(send_client);
+                    match handle {
+                        Ok(h) => h.await.unwrap(), // handle this better in next WIP
+                        Err(h) => eprint!("{:?}", h),
+                    }
                 }
             });
             spawn(async move {
@@ -112,7 +116,7 @@ impl Manager
 
 // Trait for executing a SQL commands to postgres
 pub trait DbExec: Debug {
-    fn set(&self) -> String;
+    fn set(&self, client: Arc<Client>) -> Result<JoinHandle<()>, Error>;
 }
 
 #[cfg(test)]
