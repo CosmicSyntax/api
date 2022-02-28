@@ -111,6 +111,11 @@ impl Manager {
         }
         r
     }
+
+    #[inline(always)]
+    pub async fn get_transaction<'b, 'a: 'b>(client: &'a mut Client) -> Result<tokio_postgres::Transaction<'b>, Error> {
+        client.transaction().await
+    }
 }
 
 // Trait for executing a SQL commands to postgres

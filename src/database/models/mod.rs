@@ -37,7 +37,7 @@ impl database::DbExec for Customers {
             // take the client out...
             let mut c = client.lock().take().unwrap();
             // start a transaction
-            let t = c.transaction().await.unwrap();
+            let t = database::Manager::get_transaction(&mut c).await.unwrap();
             let query = SqlBuilder::insert_into("customers")
                 .field("uuid")
                 .values(&[quote(uuid)])
