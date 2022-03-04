@@ -8,6 +8,8 @@ BEGIN;
 		PRIMARY KEY (id)
 	);
 
+	CREATE INDEX ON public.customers (created_at);
+
 	/* CREATE SEQUENCE IF NOT EXISTS public.customers_id_seq
 		START WITH 2
 		INCREMENT BY 2
