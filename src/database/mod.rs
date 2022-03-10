@@ -1,11 +1,12 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use parking_lot::Mutex;
 use tokio::spawn;
 use tokio::sync::mpsc::error::SendError;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::task::JoinHandle;
-use tokio_postgres::{Error, Client};
+use tokio_postgres::{Client, Error};
 
 use crate::error::{self, ApiErrors};
 use crate::tls::tls_config;
@@ -13,15 +14,13 @@ use crate::tls::tls_config;
 pub mod models;
 
 #[allow(dead_code)]
-pub struct Manager
-{
+pub struct Manager {
     ingress: Option<Receiver<Box<dyn DbExec + Send>>>,
     handlers: Option<Vec<JoinHandle<()>>>,
     egress: Option<Vec<Sender<Box<dyn DbExec + Send>>>>,
 }
 
-impl Manager
-{
+impl Manager {
     pub async fn new(recv: Receiver<Box<dyn DbExec + Send>>, pool_size: usize, url: &str) -> Self {
         let mut egress = Vec::with_capacity(pool_size);
         let mut handles = Vec::with_capacity(pool_size);
@@ -39,7 +38,7 @@ impl Manager
             // spawn a green thread and send off with r and rkill
             let handle = spawn(async move {
                 // when the receiver is dropped, break out of loop
-                let client = Arc::new(client);
+                let client = Arc::new(Mutex::new(Some(client)));
                 while let Some(i) = r.recv().await {
                     // placeholder
                     let send_client = client.clone();
@@ -112,11 +111,16 @@ impl Manager
         }
         r
     }
+
+    #[inline(always)]
+    pub async fn get_transaction<'b, 'a: 'b>(client: &'a mut Client) -> Result<tokio_postgres::Transaction<'b>, Error> {
+        client.transaction().await
+    }
 }
 
 // Trait for executing a SQL commands to postgres
 pub trait DbExec: Debug {
-    fn set(&self, client: Arc<Client>) -> Result<JoinHandle<()>, Error>;
+    fn set(&self, client: Arc<Mutex<Option<Client>>>) -> Result<JoinHandle<()>, Error>;
 }
 
 #[cfg(test)]

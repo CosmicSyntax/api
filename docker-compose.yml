@@ -13,6 +13,14 @@ services:
       - ${PWD}/certs/server.key:/var/lib/postgresql/server.key:ro
     ports:
       - 5432:5432
+  db_ns:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_PASSWORD=admin
+      # - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - 5432:5432
 
 networks:
   default:
