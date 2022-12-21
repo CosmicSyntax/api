@@ -7,14 +7,15 @@ edition = "2021"
 
 [dependencies]
 # postgres = "0.19"
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "uuid", "chrono"]}
 tokio-postgres = "0.7"
 sql-builder = "3"
-uuid = {version = "0.8", features = ["v4"]}
+uuid = {version = "1.2", features = ["v4"]}
 tokio = {version = "1", features = ["full"]}
 yaml-rust = "0.4"
 tokio-rustls = "0.23"
 rustls = "0.20"
 tokio-postgres-rustls = "0.9"
-rustls-pemfile = "0.2"
+rustls-pemfile = "1.0"
 chrono = "0.4"
 parking_lot = "0.12"

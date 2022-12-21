@@ -1,3 +1,4 @@
+-- Add up migration script here
 BEGIN;
 
 	CREATE TABLE IF NOT EXISTS public.customers (
@@ -16,7 +17,6 @@ BEGIN;
 		NO MINVALUE
 		NO MAXVALUE
 		CACHE 1;
-
 	ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'); */
 
 	CREATE TABLE IF NOT EXISTS public.entries (
