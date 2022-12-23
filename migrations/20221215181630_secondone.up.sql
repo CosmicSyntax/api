@@ -2,9 +2,10 @@
 BEGIN;
 
 
-	CREATE TABLE IF NOT EXISTS public.demography (
+	CREATE TABLE IF NOT EXISTS public.information (
 		id integer NOT NULL,
-		content text,
+		username text NOT NULL,
+		pw bytea NOT NULL,
 		created_at timestamp with time zone DEFAULT now() NOT NULL,
 		updated_at timestamp with time zone DEFAULT now() NOT NULL,
 		FOREIGN KEY (id) REFERENCES customers(id)

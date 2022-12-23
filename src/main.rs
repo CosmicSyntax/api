@@ -1,3 +1,7 @@
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHasher};
+use rand_core::OsRng;
+use sqlx::Transaction;
 use std::error::Error;
 // use std::time::SystemTime;
 //
@@ -18,13 +22,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let x = sqlx::migrate!("./migrations/");
     let _ = x.run(&pool).await;
 
+    let mut tx = pool.begin().await?;
     let z = sqlx::query!(
         "
             INSERT INTO customers(uuid, created_at, updated_at)
-            VALUES ($1, $2, $2);
+            VALUES ($1, $2, $2) RETURNING id;
         ",
         uuid::Uuid::new_v4(),
         chrono::Utc::now(),
+    );
+    let id = z.fetch_all(&mut tx).await?;
+    tx.commit().await?;
+
+    const PASSWORD: &str = "!Q@W#E$R%T^Y&U";
+    let argon = Argon2::default();
+    let salt = SaltString::generate(&mut OsRng);
+    let x = argon.hash_password(PASSWORD.as_bytes(), &salt).unwrap().to_string();
+
+    let z = sqlx::query!(
+        "
+            INSERT INTO information(id, username, pw)
+            VALUES ($1, $2, $3);
+        ",
+        id[0].id,
+        "myhomie",
+        x.as_bytes(),
     );
     z.fetch_all(&pool).await?;
 
