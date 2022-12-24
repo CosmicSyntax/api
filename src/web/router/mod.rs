@@ -2,3 +2,7 @@
 mod status;
 pub use crate::web::router::status::*;
 
+mod auth;
+pub use crate::web::router::auth::*;
+
+mod register;
