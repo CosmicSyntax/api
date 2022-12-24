@@ -1,6 +1,7 @@
 pub mod config;
-pub mod database;
 pub mod error;
+pub mod global;
+pub mod logger;
 pub mod tls;
 pub mod web;
 
