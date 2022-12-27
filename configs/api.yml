@@ -1,6 +1,6 @@
 api:
   test: "api_test"
 db:
-  url: "host=db user=postgres password=admin port=5432 sslmode=disable"
+  url: "postgres://postgres:admin@localhost:5432/api"
   url_host: "host=localhost user=postgres password=admin port=5432 sslmode=require dbname=api"
   test: "db_test"

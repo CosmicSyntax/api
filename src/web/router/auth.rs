@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::global;
 use crate::web::jwt::{self, validate_token};
 
-#[get("/testAuth")]
+#[get("/check")]
 async fn auth(auth: BearerAuth) -> HttpResponse {
     let key = global::CONFIG.get().unwrap();
     let claim = validate_token(auth.token(), &key.decoder, &key.validation);
@@ -21,7 +21,7 @@ async fn auth(auth: BearerAuth) -> HttpResponse {
     }
 }
 
-#[get("/testToken/{id}")]
+#[get("/token/{id}")]
 async fn token(path: web::Path<String>) -> HttpResponse {
     let uuid_string = path.into_inner();
     let uuid = Uuid::from_str(&uuid_string).unwrap();
@@ -31,5 +31,5 @@ async fn token(path: web::Path<String>) -> HttpResponse {
 }
 
 pub fn config_auth(cfg: &mut web::ServiceConfig) {
-    cfg.service(auth).service(token);
+    cfg.service(web::scope("/auth").service(auth).service(token));
 }

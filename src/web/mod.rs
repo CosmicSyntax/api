@@ -1,21 +1,24 @@
 use actix_web::middleware::Logger;
+use actix_web::web::Data;
 use actix_web::{middleware, App, HttpServer};
+
+use crate::db::DB;
 mod helper;
 pub mod jwt;
-mod router;
 mod midware;
+mod router;
+mod tls;
 
-use crate::tls;
-
-pub async fn start_server(with_tls: bool) -> std::io::Result<()> {
-    let server = HttpServer::new(|| {
+pub async fn start_server(with_tls: bool, db: Data<DB>) -> std::io::Result<()> {
+    let server = HttpServer::new(move || {
         App::new()
             .wrap(helper::custom_404_handle())
             .wrap(middleware::NormalizePath::trim())
             .wrap(Logger::default())
-            .wrap(midware::ApiMiddle)
+            .app_data(db.clone())
             .configure(router::config_status)
             .configure(router::config_auth)
+            .configure(router::config_reg)
     });
     if with_tls {
         server

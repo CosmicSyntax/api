@@ -5,7 +5,9 @@ use serde_json::json;
 use tokio::{spawn, time::sleep};
 use tracing::{info, instrument, span, Instrument, Level};
 
-#[get("/status")]
+use crate::web::midware::ApiMiddle;
+
+#[get("")]
 #[instrument]
 async fn status() -> HttpResponse {
     info!("I am starting");
@@ -27,5 +29,5 @@ async fn status() -> HttpResponse {
 }
 
 pub fn config_status(cfg: &mut web::ServiceConfig) {
-    cfg.service(status);
+    cfg.service(web::scope("/status").wrap(ApiMiddle).service(status));
 }

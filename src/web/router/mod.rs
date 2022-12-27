@@ -6,3 +6,4 @@ mod auth;
 pub use crate::web::router::auth::*;
 
 mod register;
+pub use crate::web::router::register::*;

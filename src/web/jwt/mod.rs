@@ -14,7 +14,7 @@ pub struct Claims {
     usr: String,
 }
 
-const ISSUER: &str = "payment-service";
+const ISSUER: &str = "async-api";
 
 pub fn get_token(key: &EncodingKey, token_lifetime: usize, uuid: Uuid) -> Result<String> {
     // Get exp UNIX EPOC
