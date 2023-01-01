@@ -1,15 +1,21 @@
-use std::{error::Error, future};
+use std::future;
 
-use crate::{db::DB, error::BAD_REQUEST_ERROR, models::UserLogin};
+use crate::{
+    db::DB,
+    error::{ApiErrors, BAD_REQUEST_ERROR},
+    models::registration::UserLogin,
+};
 use actix_web::{
     post,
     web::{self, BytesMut, Data, Payload},
     HttpResponse,
 };
 use futures::StreamExt;
+use serde_json::json;
+use tracing::{span, Instrument, Level};
 
 #[post("/register")]
-async fn register(pl: Payload, db: Data<DB>) -> Result<HttpResponse, Box<dyn Error>> {
+async fn register(pl: Payload, db: Data<DB>) -> Result<HttpResponse, ApiErrors> {
     // Collect the paylod from a stream
     let mut data = BytesMut::new();
     pl.for_each(|v| {
@@ -25,10 +31,13 @@ async fn register(pl: Payload, db: Data<DB>) -> Result<HttpResponse, Box<dyn Err
 
     // Add user to DB
     if let Ok(r) = registration {
-        r.register(db).await?;
-        Ok(HttpResponse::Ok().finish())
+        let span = span!(Level::ERROR, "New User Registration", username = r.username,);
+        // check first...
+        r.check(&db).instrument(span.clone()).await?;
+        let uuid = r.register(&db).instrument(span).await?;
+        Ok(HttpResponse::Ok().json(json!({"message": uuid.to_string()})))
     } else {
-        Err(Box::new(BAD_REQUEST_ERROR))
+        Err(BAD_REQUEST_ERROR)
     }
 }
 

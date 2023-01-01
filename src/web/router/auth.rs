@@ -13,7 +13,7 @@ async fn auth(auth: BearerAuth) -> HttpResponse {
     let key = global::CONFIG.get().unwrap();
     let claim = validate_token(auth.token(), &key.decoder, &key.validation);
     match claim {
-        Ok(c) => HttpResponse::build(StatusCode::OK).json(json!({
+        Ok(_) => HttpResponse::build(StatusCode::OK).json(json!({
             "message": "ok"
         })),
         Err(e) => HttpResponse::build(StatusCode::UNAUTHORIZED)
