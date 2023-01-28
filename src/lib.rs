@@ -1,6 +1,7 @@
 pub mod config;
-pub mod database;
+pub mod db;
 pub mod error;
-pub mod tls;
-
-pub use config::Configuration;
+pub mod global;
+pub mod logger;
+pub mod models;
+pub mod web;

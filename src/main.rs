@@ -1,27 +1,21 @@
-use std::error::Error;
-
-use api::database::models::Customers;
-use api::database::Manager;
-use api::Configuration;
-use chrono::Utc;
-use tokio::sync::mpsc::channel;
+use actix_web::web::Data;
+use anyhow::{Ok, Result};
+use api::{db::DB, error::SERVER_START_ERROR, global, logger::Logger, web};
+use tracing::warn;
+use tracing_subscriber::filter::LevelFilter;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let conf = Configuration::new("./configs/api.yml").await?;
-    let (s, r) = channel(10000);
-    let mut manager = Manager::new(r, 50, conf.0[0]["db"]["url_host"].as_str().unwrap()).await;
-    let r = manager.start()?;
+async fn main() -> Result<()> {
+    Logger::start(LevelFilter::WARN);
+    global::init_once();
 
-    let start = Utc::now().time();
-    for _ in 0..10000 {
-        let customer: Customers = Default::default();
-        s.send(Box::new(customer)).await?;
-    }
-    drop(s);
-    r.await?;
-    let stop = Utc::now().time();
-    let diff = stop - start;
-    println!("{}", diff.num_seconds());
+    let x = asm::add();
+    warn!("I did some inline asm: {x}");
+
+    let db = DB::new(&global::CONFIG.get().ok_or(SERVER_START_ERROR)?.db_url).await;
+    let db = Data::new(db);
+
+    web::start_server(true, db).await?;
+
     Ok(())
 }
