@@ -16,7 +16,7 @@ pub fn add() -> u32 {
     left
 }
 
-#[cfg(target_arch = "x86")]
+#[cfg(target_arch = "x86_64")]
 pub fn add() -> u32 {
     let left: u32;
     let _right: u32;
