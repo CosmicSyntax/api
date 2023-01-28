@@ -32,7 +32,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install sqlx
-      run: cargo install sqlx
+      run: cargo install sqlx-cli
     - name: Run migration
       run: sqlx migrate run
     - name: Build
