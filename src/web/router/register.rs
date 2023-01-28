@@ -6,17 +6,19 @@ use crate::{
     models::registration::UserLogin,
 };
 use actix_web::{
-    post,
+    get, post,
     web::{self, BytesMut, Data, Payload},
-    HttpResponse,
+    HttpRequest, HttpResponse,
 };
 use futures::StreamExt;
 use serde_json::json;
-use tracing::{span, Instrument, Level};
+use tracing::{error, instrument, span, Instrument, Level};
 
 #[post("/register")]
-async fn register(pl: Payload, db: Data<DB>) -> Result<HttpResponse, ApiErrors> {
+#[instrument(skip(pl, db), level = "error")]
+async fn register(pl: Payload, req: HttpRequest, db: Data<DB>) -> Result<HttpResponse, ApiErrors> {
     // Collect the paylod from a stream
+    // The data is small, so no need to stream, but this is good exercise
     let mut data = BytesMut::new();
     pl.for_each(|v| {
         if let Ok(v) = v {
@@ -26,23 +28,62 @@ async fn register(pl: Payload, db: Data<DB>) -> Result<HttpResponse, ApiErrors> 
     })
     .await;
 
-    // Deseralization
-    let registration = serde_json::from_slice::<UserLogin>(&data);
+    match serde_json::from_slice::<UserLogin>(&data) {
+        Ok(r) => {
+            let uuid = async {
+                // check first if the username already exists
+                r.check(&db).await?;
+                r.register(&db).await
+            }
+            .instrument(span!(
+                Level::ERROR,
+                "New User Registration",
+                username = r.username,
+            ))
+            .await?;
+            Ok(HttpResponse::Ok().json(json!({"message": uuid.to_string()})))
+        }
+        Err(e) => {
+            error!("{}", e);
+            Err(BAD_REQUEST_ERROR)
+        }
+    }
+}
 
-    // Add user to DB
-    if let Ok(r) = registration {
-        let span = span!(Level::ERROR, "New User Registration", username = r.username,);
-        // check first...
-        r.check(&db).instrument(span.clone()).await?;
-        let uuid = r.register(&db).instrument(span).await?;
-        Ok(HttpResponse::Ok().json(json!({"message": uuid.to_string()})))
-    } else {
-        Err(BAD_REQUEST_ERROR)
+#[get("/verify")]
+#[instrument(skip(pl, db), level = "warn")]
+async fn verify(pl: Payload, req: HttpRequest, db: Data<DB>) -> Result<HttpResponse, ApiErrors> {
+    let mut data = BytesMut::new();
+    pl.for_each(|v| {
+        if let Ok(v) = v {
+            data.extend_from_slice(&v);
+        }
+        future::ready(())
+    })
+    .await;
+    match serde_json::from_slice::<UserLogin>(&data) {
+        Ok(r) => {
+            async {
+                // check first if the username already exists
+                r.verify(&db).await
+            }
+            .instrument(span!(
+                Level::ERROR,
+                "User verification",
+                username = r.username,
+            ))
+            .await?;
+            Ok(HttpResponse::Ok().json(json!({"message": "Ok"})))
+        }
+        Err(e) => {
+            error!("{}", e);
+            Err(BAD_REQUEST_ERROR)
+        }
     }
 }
 
 pub fn config_reg(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/membership").service(register));
+    cfg.service(web::scope("/membership").service(register).service(verify));
 }
 
 // let mut tx = pool.begin().await?;

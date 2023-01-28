@@ -2,7 +2,9 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 
 #[derive(Debug, Clone)]
-pub struct DB(pub Pool<Postgres>);
+pub struct DB {
+    pub pg: Pool<Postgres>,
+}
 
 impl DB {
     pub async fn new(addr: &str) -> Self {
@@ -11,6 +13,6 @@ impl DB {
             .connect(addr)
             .await
             .expect("Could not make connection to DB");
-        Self(pool)
+        Self { pg: pool }
     }
 }

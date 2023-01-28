@@ -15,6 +15,7 @@ pub async fn start_server(with_tls: bool, db: Data<DB>) -> std::io::Result<()> {
             .wrap(helper::custom_404_handle())
             .wrap(middleware::NormalizePath::trim())
             .wrap(Logger::default())
+            .wrap(middleware::Compress::default())
             .app_data(db.clone())
             .configure(router::config_status)
             .configure(router::config_auth)

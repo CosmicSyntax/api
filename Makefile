@@ -1,8 +1,8 @@
 db:
-	docker compose up db -d
-
-db_ns:
 	docker compose up db_ns -d
+
+# db:
+# 	docker compose up db -d
 
 down:
 	docker compose down
