@@ -13,7 +13,7 @@ path = "./src/main.rs"
 
 [dependencies]
 # postgres = "0.19"
-sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "uuid", "chrono"]}
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "uuid", "chrono", "offline"]}
 tokio-postgres = "0.7"
 sql-builder = "3"
 uuid = {version = "1.2", features = ["v4"]}

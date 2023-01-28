@@ -1,0 +1,107 @@
+{
+  "db": "PostgreSQL",
+  "4963f8a72a63158745e151ec1d29825bd840594a1c610a43c531e71b8873f2e9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "pw",
+          "ordinal": 2,
+          "type_info": "Bytea"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                SELECT * FROM information WHERE username = $1\n            "
+  },
+  "5fcf597c0dbc5c3fd7325ab6be5cf4f84bd16fd4db16b68acac1edf682bc7f75": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "uuid",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                INSERT INTO customers(uuid)\n                VALUES ($1) RETURNING id, uuid;\n            "
+  },
+  "8cef2733ab50ded292263ed795bacfc3d2e74e891b5d6a30736060f658d9acfb": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                SELECT id FROM information WHERE username = $1;\n            "
+  },
+  "9945d33f2a59b511424c26421ca9535b7c847c0bda5f0d0570f1f774c912c01e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Text",
+          "Bytea"
+        ]
+      }
+    },
+    "query": "\n                INSERT INTO information(id, username, pw)\n                VALUES ($1, $2, $3);\n            "
+  }
+}
