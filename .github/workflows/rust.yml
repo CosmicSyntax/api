@@ -40,11 +40,26 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: To skip sqlx install
+      id: to-skip-sqlx
+      shell: sh +e {0}
+      run: |
+        skip="false"
+        if [[ -x "$(command -v sqlx)" && "$(sqlx --version | awk '{print $NF}')" = 0.6.2 ]]; then
+          skip="true"
+        fi
+        echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
     - name: Install sqlx
+      if: ${{ steps.to-skip.outputs.skip == 'false' }}
       run: cargo install sqlx-cli --force
+
     - name: Run migration
       run: sqlx migrate run
+
     - name: Build
       run: cargo build --verbose
+
     - name: Run tests
       run: cargo test --verbose
