@@ -41,7 +41,7 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Install sqlx
-      run: cargo install sqlx-cli
+      run: cargo install sqlx-cli --force
     - name: Run migration
       run: sqlx migrate run
     - name: Build
