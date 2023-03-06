@@ -20,6 +20,7 @@ pub async fn start_server(with_tls: bool, db: Data<DB>) -> std::io::Result<()> {
             .configure(router::config_status)
             .configure(router::config_auth)
             .configure(router::config_reg)
+            .configure(router::config_stream)
     });
     if with_tls {
         server
