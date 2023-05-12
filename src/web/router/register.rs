@@ -4,6 +4,7 @@ use crate::{
     db::DB,
     error::{ApiErrors, BAD_REQUEST_ERROR},
     models::registration::UserLogin,
+    web::helper::verify as help_me_verify,
 };
 use actix_web::{
     get, post,
@@ -61,25 +62,8 @@ async fn verify(pl: Payload, req: HttpRequest, db: Data<DB>) -> Result<HttpRespo
         future::ready(())
     })
     .await;
-    match serde_json::from_slice::<UserLogin>(&data) {
-        Ok(r) => {
-            async {
-                // check first if the username already exists
-                r.verify(&db).await
-            }
-            .instrument(span!(
-                Level::ERROR,
-                "User verification",
-                username = r.username,
-            ))
-            .await?;
-            Ok(HttpResponse::Ok().json(json!({"message": "Ok"})))
-        }
-        Err(e) => {
-            error!("{}", e);
-            Err(BAD_REQUEST_ERROR)
-        }
-    }
+    help_me_verify(data, &db).await?;
+    Ok(HttpResponse::Ok().json(json!({"message": "Ok"})))
 }
 
 pub fn config_reg(cfg: &mut web::ServiceConfig) {
