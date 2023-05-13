@@ -17,7 +17,7 @@ async fn auth(auth: BearerAuth) -> HttpResponse {
             "message": "ok"
         })),
         Err(e) => HttpResponse::build(StatusCode::UNAUTHORIZED)
-            .json(json!({ "message": format!("{:?}", e) })),
+            .json(json!({ "message": format!("{e:?}") })),
     }
 }
 

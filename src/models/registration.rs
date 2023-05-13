@@ -9,7 +9,9 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::db::DB;
-use crate::error::{ApiErrors, BAD_REQUEST_ERROR, DB_ERROR, DB_ERROR_USER_EXISTS, PW_ERROR, PW_ERROR_INCORRECT};
+use crate::error::{
+    ApiErrors, BAD_REQUEST_ERROR, DB_ERROR, DB_ERROR_USER_EXISTS, PW_ERROR, PW_ERROR_INCORRECT,
+};
 
 #[derive(Deserialize)]
 pub struct UserLogin<'a> {
@@ -86,9 +88,11 @@ impl<'a> UserLogin<'a> {
         );
         let record = row.fetch_one(&db.pg).await.map_err(Self::db_error_handle)?;
         let record_pw = String::from_utf8_lossy(&record.pw);
-        let parsed_pw =
-            PasswordHash::new(&record_pw).map_err(Self::pw_error_handle)?;
-        if Argon2::default().verify_password(self.password.as_bytes(), &parsed_pw).is_ok() {
+        let parsed_pw = PasswordHash::new(&record_pw).map_err(Self::pw_error_handle)?;
+        if Argon2::default()
+            .verify_password(self.password.as_bytes(), &parsed_pw)
+            .is_ok()
+        {
             return Ok(());
         }
         Err(PW_ERROR_INCORRECT).map_err(Self::pw_error_handle)
