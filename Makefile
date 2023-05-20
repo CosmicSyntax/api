@@ -4,6 +4,9 @@ db:
 # db:
 # 	docker compose up db -d
 
+mongo:
+	docker compose up mongo -d
+
 down:
 	docker compose down
 
@@ -22,4 +25,4 @@ gen_curve:
 	@openssl ecparam -name prime256v1 -genkey -noout -out certs/private.ec.key
 	@openssl ec -in certs/private.ec.key -pubout -out certs/public-key.pem
 
-.PHONY: migrate db db_ns down certs gen_curve
+.PHONY: migrate db db_ns down certs gen_curve mongo

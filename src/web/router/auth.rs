@@ -28,10 +28,10 @@ async fn auth(auth: BearerAuth) -> HttpResponse {
     }
 }
 
-#[get("/token/{id}")]
+#[get("/token/{id}/{mess}")]
 async fn token(
     pl: Payload,
-    path: web::Path<String>,
+    path: web::Path<(String, String)>,
     db: Data<DB>,
 ) -> Result<HttpResponse, ApiErrors> {
     let mut data = BytesMut::new();
@@ -47,13 +47,18 @@ async fn token(
         .instrument(span!(Level::ERROR, "User verification",))
         .await?;
 
-    let uuid_string = path.into_inner();
-    let uuid = Uuid::from_str(&uuid_string).unwrap();
+    let path = path.into_inner();
+    let uuid = Uuid::from_str(&path.0).unwrap();
     let key = global::CONFIG.get().unwrap();
     let token = jwt::get_token(&key.encoder, 10, uuid).unwrap();
-    Ok(HttpResponse::build(StatusCode::OK).json(json!({ "token": token })))
+    Ok(HttpResponse::build(StatusCode::OK).json(json!({ "token": token, "message": &path.1 })))
 }
 
 pub fn config_auth(cfg: &mut web::ServiceConfig) {
     cfg.service(web::scope("/auth").service(auth).service(token));
+}
+
+#[cfg(test)]
+mod test {
+
 }

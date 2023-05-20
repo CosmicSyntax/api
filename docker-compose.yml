@@ -21,6 +21,14 @@ services:
       # - POSTGRES_HOST_AUTH_METHOD=trust
     ports:
       - 5432:5432
+  mongo:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - 27017:27017
 
 networks:
   default:
