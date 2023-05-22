@@ -60,5 +60,21 @@ pub fn config_auth(cfg: &mut web::ServiceConfig) {
 
 #[cfg(test)]
 mod test {
+    use actix_web::{test, web::Data, App};
+    use sqlx::PgPool;
 
+    use crate::db::DB;
+    use crate::web::router::config_auth;
+
+    #[sqlx::test]
+    async fn test_token(pool: PgPool) {
+        let data = Data::new(DB { pg: pool });
+        let app = test::init_service(App::new().app_data(data).configure(config_auth)).await;
+        let req = test::TestRequest::get()
+            .uri("/auth/token/00000000-0000-0000-0000-000000000000/abd")
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_client_error())
+    }
 }
