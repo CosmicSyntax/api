@@ -1,19 +1,26 @@
-use std::future;
-use std::str::FromStr;
+use std::{future, str::FromStr};
 
-use actix_web::web::{BytesMut, Data, Payload};
-use actix_web::{get, http::StatusCode, web, HttpResponse};
+use actix_web::{
+    get,
+    http::StatusCode,
+    web::{self, BytesMut, Data, Payload},
+    HttpResponse,
+};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use futures::StreamExt;
 use serde_json::json;
 use tracing::{span, Instrument, Level};
 use uuid::Uuid;
 
-use crate::db::DB;
-use crate::error::ApiErrors;
-use crate::global;
-use crate::web::helper::verify;
-use crate::web::jwt::{self, validate_token};
+use crate::{
+    db::DB,
+    error::ApiErrors,
+    global,
+    web::{
+        helper::verify,
+        jwt::{self, validate_token},
+    },
+};
 
 #[get("/check")]
 async fn auth(auth: BearerAuth) -> HttpResponse {
@@ -61,20 +68,56 @@ pub fn config_auth(cfg: &mut web::ServiceConfig) {
 #[cfg(test)]
 mod test {
     use actix_web::{test, web::Data, App};
+    use serde::Deserialize;
+    use serde_json::json;
     use sqlx::PgPool;
 
-    use crate::db::DB;
-    use crate::web::router::config_auth;
+    use crate::{db::DB, global, models::registration::UserLogin, web::router::config_auth};
 
     #[sqlx::test]
     async fn test_token(pool: PgPool) {
+        global::init_once();
+
         let data = Data::new(DB { pg: pool });
+
+        const USERNAME: &str = "dtchoi";
+        const PW: &str = "12345678";
+
+        // create user profile
+        let user = UserLogin {
+            username: USERNAME,
+            password: PW,
+        };
+
+        // Setup data
+        let uid = user.register(&data).await.unwrap();
+
         let app = test::init_service(App::new().app_data(data).configure(config_auth)).await;
         let req = test::TestRequest::get()
             .uri("/auth/token/00000000-0000-0000-0000-000000000000/abd")
             .to_request();
-
         let resp = test::call_service(&app, req).await;
-        assert!(resp.status().is_client_error())
+        assert!(resp.status().is_client_error());
+
+        let req = test::TestRequest::get()
+            .uri(&format!("/auth/token/{}/abd", uid))
+            .set_payload(
+                json!({
+                    "username": "dtchoi",
+                    "password": "12345678",
+                })
+                .to_string(),
+            )
+            .to_request();
+
+        #[derive(Deserialize)]
+        struct Message {
+            message: String,
+            token: String,
+        }
+
+        let resp: Message = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(resp.message, "abd");
+        assert!(!resp.token.is_empty());
     }
 }
