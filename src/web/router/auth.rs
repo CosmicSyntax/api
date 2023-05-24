@@ -67,7 +67,7 @@ pub fn config_auth(cfg: &mut web::ServiceConfig) {
 
 #[cfg(test)]
 mod test {
-    use actix_web::{test, web::Data, App};
+    use actix_web::{http::header, test, web::Data, App};
     use serde::Deserialize;
     use serde_json::json;
     use sqlx::PgPool;
@@ -75,7 +75,7 @@ mod test {
     use crate::{db::DB, global, models::registration::UserLogin, web::router::config_auth};
 
     #[sqlx::test]
-    async fn test_token(pool: PgPool) {
+    async fn test_token_and_check(pool: PgPool) {
         global::init_once();
 
         let data = Data::new(DB { pg: pool });
@@ -92,6 +92,7 @@ mod test {
         // Setup data
         let uid = user.register(&data).await.unwrap();
 
+        // Test with wrong creds
         let app = test::init_service(App::new().app_data(data).configure(config_auth)).await;
         let req = test::TestRequest::get()
             .uri("/auth/token/00000000-0000-0000-0000-000000000000/abd")
@@ -99,6 +100,7 @@ mod test {
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_client_error());
 
+        // Test with right creds
         let req = test::TestRequest::get()
             .uri(&format!("/auth/token/{}/abd", uid))
             .set_payload(
@@ -118,6 +120,23 @@ mod test {
 
         let resp: Message = test::call_and_read_body_json(&app, req).await;
         assert_eq!(resp.message, "abd");
-        assert!(!resp.token.is_empty());
+        let token = resp.token;
+        assert!(!token.is_empty());
+
+        // Test check with right token
+        let req = test::TestRequest::get()
+            .uri("/auth/check")
+            .insert_header((header::AUTHORIZATION, format!("Bearer {}", token)))
+            .to_request();
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+
+        // Test check with wrong token
+        let req = test::TestRequest::get()
+            .uri("/auth/check")
+            .insert_header((header::AUTHORIZATION, "Bearer wrongtokenman"))
+            .to_request();
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_client_error());
     }
 }
