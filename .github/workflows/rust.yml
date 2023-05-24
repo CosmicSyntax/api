@@ -46,13 +46,13 @@ jobs:
       shell: sh +e {0}
       run: |
         skip="false"
-        if [ -x "$(command -v sqlx)" ] && [ "$(sqlx --version | awk '{print $NF}')" = 0.6.2 ]; then
+        if [ -x "$(command -v sqlx)" ] && [ "$(sqlx --version | awk '{print $NF}')" = 0.6.3 ]; then
           skip="true"
         fi
         echo "skip=$skip" >> "$GITHUB_OUTPUT"
 
-    - name: Install sqlx
-      if: ${{ steps.to-skip-sqlx.outputs.skip == 'false' }}
+    - if: ${{ steps.to-skip-sqlx.outputs.skip == 'false' }}
+      name: Install sqlx
       run: cargo install sqlx-cli --force
 
     - name: Run migration
