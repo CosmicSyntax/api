@@ -61,8 +61,11 @@ jobs:
     - name: Build
       run: cargo build --verbose
 
-    - name: Run tests
+    - name: Run Lint
       run: |
         make certs
         make gen_curve
-        cargo test --verbose
+        cargo clippy -- -D warnings
+
+    - name: Run tests
+      run: cargo test --verbose
