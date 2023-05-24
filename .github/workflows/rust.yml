@@ -61,5 +61,11 @@ jobs:
     - name: Build
       run: cargo build --verbose
 
+    - name: Install depends_on:
+      run: sudo apt install make
+
     - name: Run tests
-      run: cargo test --verbose
+      run: |
+        make certs
+        make gen_curve
+        cargo test --verbose
