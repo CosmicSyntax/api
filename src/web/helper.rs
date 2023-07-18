@@ -3,9 +3,17 @@ use actix_web::{
     dev::ServiceResponse,
     http::StatusCode,
     middleware::{ErrorHandlerResponse, ErrorHandlers},
+    web::{BytesMut, Data},
     HttpResponse,
 };
 use serde_json::json;
+use tracing::{error, span, Instrument, Level};
+
+use crate::{
+    db::DB,
+    error::{ApiErrors, BAD_REQUEST_ERROR},
+    models::registration::UserLogin,
+};
 
 pub fn custom_404_handle() -> ErrorHandlers<BoxBody> {
     ErrorHandlers::new().handler(StatusCode::NOT_FOUND, |res| {
@@ -22,4 +30,26 @@ pub fn custom_404_handle() -> ErrorHandlers<BoxBody> {
             },
         )))
     })
+}
+
+pub async fn verify(data: BytesMut, db: &Data<DB>) -> Result<(), ApiErrors> {
+    match serde_json::from_slice::<UserLogin>(&data) {
+        Ok(r) => {
+            async {
+                // check first if the username already exists
+                r.verify(db).await
+            }
+            .instrument(span!(
+                Level::ERROR,
+                "User verification",
+                username = r.username,
+            ))
+            .await?;
+            Ok(())
+        }
+        Err(e) => {
+            error!("{}", e);
+            Err(BAD_REQUEST_ERROR)
+        }
+    }
 }
