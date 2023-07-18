@@ -46,7 +46,7 @@ jobs:
       shell: sh +e {0}
       run: |
         skip="false"
-        if [ -x "$(command -v sqlx)" ] && [ "$(sqlx --version | awk '{print $NF}')" = 0.6.3 ]; then
+        if [ -x "$(command -v sqlx)" ] && [ "$(sqlx --version | awk -F'[ .]' '{print $2"."$3}')" = 0.7 ]; then
           skip="true"
         fi
         echo "skip=$skip" >> "$GITHUB_OUTPUT"
