@@ -49,7 +49,9 @@ impl<'a> UserLogin<'a> {
             uuid::Uuid::new_v4(),
         );
         let record = row
-            .fetch_one(&mut tx)
+            // In 0.7, `Transaction` can no longer implement `Executor` directly,
+            // so it must be dereferenced to the internal connection type.
+            .fetch_one(&mut *tx)
             .await
             .map_err(Self::db_error_handle)?;
 
@@ -74,7 +76,7 @@ impl<'a> UserLogin<'a> {
             self.username,
             pw_result.as_bytes(),
         );
-        row.execute(&mut tx).await.map_err(Self::db_error_handle)?;
+        row.execute(&mut *tx).await.map_err(Self::db_error_handle)?;
         tx.commit().await.map_err(Self::db_error_handle)?;
         Ok(record.uuid)
     }
