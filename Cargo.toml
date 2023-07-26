@@ -27,6 +27,7 @@ chrono = "0.4"
 parking_lot = "0.12"
 actix-web = { version = "4.2", features = ["rustls-0_21", "cookies"] }
 actix-web-httpauth = "0.8"
+actix-multipart = "0.6.0"
 argon2 = { version = "0.5", features = ["std"] }
 rand_core = { version = "0.6", features = ["std"] }
 anyhow = "1"

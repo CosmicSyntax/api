@@ -10,3 +10,6 @@ pub use crate::web::router::register::*;
 
 mod stream;
 pub use crate::web::router::stream::*;
+
+mod upload;
+pub use crate::web::router::upload::*;
