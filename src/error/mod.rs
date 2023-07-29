@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fmt::Display;
 
+use actix_multipart::MultipartError;
 use actix_web::{
     body::BoxBody,
     http::{header::ContentType, StatusCode},
@@ -14,6 +15,7 @@ pub enum ApiErrors {
     DBError(&'static str),
     PWError(&'static str),
     BadRequest(&'static str),
+    UploadError(String),
 }
 
 pub const SERVER_START_ERROR: ApiErrors = ApiErrors::ServerStartError("could not start server");
@@ -23,6 +25,7 @@ pub const DB_ERROR_USER_EXISTS: ApiErrors = ApiErrors::DBError("Username already
 pub const DB_ERROR_USER_NOT_EXISTS: ApiErrors = ApiErrors::DBError("Username does not exists");
 pub const PW_ERROR: ApiErrors = ApiErrors::PWError("Could not verify password");
 pub const PW_ERROR_INCORRECT: ApiErrors = ApiErrors::PWError("Password provided does not match");
+pub const UP_MULTIPART_ERROR: ApiErrors = ApiErrors::PWError("Password provided does not match");
 
 impl Error for ApiErrors {}
 
@@ -33,6 +36,7 @@ impl ResponseError for ApiErrors {
             ApiErrors::BadRequest(_) => StatusCode::BAD_REQUEST,
             ApiErrors::DBError(_) => StatusCode::BAD_REQUEST,
             ApiErrors::PWError(_) => StatusCode::UNAUTHORIZED,
+            ApiErrors::UploadError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -65,6 +69,17 @@ impl Display for ApiErrors {
             ApiErrors::PWError(msg) => {
                 write!(f, "{msg}")
             }
+            ApiErrors::UploadError(msg) => {
+                write!(f, "{msg}")
+            }
         }
+    }
+}
+
+// Error conversions
+
+impl From<MultipartError> for ApiErrors {
+    fn from(value: MultipartError) -> Self {
+        ApiErrors::UploadError(value.to_string())
     }
 }
