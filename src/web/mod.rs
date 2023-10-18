@@ -24,7 +24,7 @@ pub async fn start_server(with_tls: bool, db: Data<DB>) -> std::io::Result<()> {
     });
     if with_tls {
         server
-            .bind_rustls(
+            .bind_rustls_021(
                 ("0.0.0.0", 8080),
                 tls::load_certs("certs/cert.pem", "certs/key.pem"),
             )?
