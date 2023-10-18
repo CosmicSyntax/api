@@ -5,7 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
-members = ["asm"]
+members = ["asm/"]
 
 [[bin]]
 name = "api"
@@ -21,11 +21,11 @@ uuid = {version = "1.2", features = ["v4"]}
 tokio = {version = "1", features = ["full"]}
 yaml-rust = "0.4"
 tokio-rustls = "0.24"
-rustls = "0.20"
+rustls = "0.21"
 rustls-pemfile = "1.0"
 chrono = "0.4"
 parking_lot = "0.12"
-actix-web = { version = "4.2", features = ["rustls", "cookies"] }
+actix-web = { version = "4.2", features = ["rustls-0_21", "cookies"] }
 actix-web-httpauth = "0.8"
 argon2 = { version = "0.5", features = ["std"] }
 rand_core = { version = "0.6", features = ["std"] }
@@ -33,7 +33,7 @@ anyhow = "1"
 serde = { version = "~1.0", features = ["derive"] }
 serde_json = "~1.0.81"
 sha2 = "~0.10"
-jsonwebtoken = { version = "8.1.1", features = ["use_pem"] }
+jsonwebtoken = { version = "9.0.0", features = ["use_pem"] }
 openssl = "~0.10"
 tracing = "~0.1"
 tracing-subscriber = "~0.3"
