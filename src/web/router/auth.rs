@@ -63,14 +63,7 @@ async fn token(
     let uuid = Uuid::from_str(&path.0).unwrap();
     let key = global::CONFIG.get().unwrap();
     let token = jwt::get_token(&key.encoder, 10, uuid).unwrap();
-    let cookie = Cookie::build("async-api", uuid.to_string())
-        .secure(true)
-        .http_only(true)
-        .finish();
-
-    Ok(HttpResponse::build(StatusCode::OK)
-        .cookie(cookie)
-        .json(json!({ "token": token, "message": &path.1 })))
+    Ok(HttpResponse::build(StatusCode::OK).json(json!({ "token": token, "message": &path.1 })))
 }
 
 pub fn config_auth(cfg: &mut web::ServiceConfig) {

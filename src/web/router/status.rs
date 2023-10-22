@@ -1,16 +1,32 @@
 use std::time::{Duration, SystemTime};
 
+use actix_web::cookie::{self, Cookie};
+use actix_web::HttpRequest;
 use actix_web::{get, http::StatusCode, web, HttpResponse};
 use serde_json::json;
 use tokio::{spawn, time::sleep};
-use tracing::{info, instrument, span, Instrument, Level};
+use tracing::{info, instrument, span, warn, Instrument, Level};
 
 use crate::web::midware::ApiMiddle;
 
 #[get("")]
 #[instrument]
-async fn status() -> HttpResponse {
+async fn status(req: HttpRequest) -> HttpResponse {
     info!("I am starting");
+    let mut psession = false;
+
+    let cookie = if let Some(c) = req.cookie("status") {
+        psession = true;
+        warn!("{:?}", c);
+        c
+    } else {
+        // no cookie... set one
+        Cookie::build("status", "good")
+            .http_only(true)
+            .secure(true)
+            .max_age(cookie::time::Duration::new(60, 0))
+            .finish()
+    };
 
     spawn(
         async {
@@ -24,8 +40,14 @@ async fn status() -> HttpResponse {
         )),
     );
 
-    let json_rep = json!({"api": "ok", "db": "ok"});
-    HttpResponse::build(StatusCode::OK).json(json_rep)
+    if psession {
+        HttpResponse::build(StatusCode::OK)
+            .json(json!({"api": "ok", "db": "ok", "message": "hello again!"}))
+    } else {
+        HttpResponse::build(StatusCode::OK)
+            .cookie(cookie)
+            .json(json!({"api": "ok", "db": "ok"}))
+    }
 }
 
 pub fn config_status(cfg: &mut web::ServiceConfig) {
