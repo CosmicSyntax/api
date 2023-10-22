@@ -1,7 +1,6 @@
 use std::{future, str::FromStr};
 
 use actix_web::{
-    cookie::Cookie,
     get,
     http::StatusCode,
     web::{self, BytesMut, Data, Payload},
