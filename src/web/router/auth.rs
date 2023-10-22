@@ -1,6 +1,7 @@
 use std::{future, str::FromStr};
 
 use actix_web::{
+    cookie::Cookie,
     get,
     http::StatusCode,
     web::{self, BytesMut, Data, Payload},
@@ -9,7 +10,7 @@ use actix_web::{
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use futures::StreamExt;
 use serde_json::json;
-use tracing::{span, Instrument, Level};
+use tracing::{error, instrument, span, Instrument, Level};
 use uuid::Uuid;
 
 use crate::{
@@ -23,6 +24,7 @@ use crate::{
 };
 
 #[get("/check")]
+#[instrument(level = "error")]
 async fn auth(auth: BearerAuth) -> HttpResponse {
     let key = global::CONFIG.get().unwrap();
     let claim = validate_token(auth.token(), &key.decoder, &key.validation);
@@ -30,8 +32,11 @@ async fn auth(auth: BearerAuth) -> HttpResponse {
         Ok(_) => HttpResponse::build(StatusCode::OK).json(json!({
             "message": "ok"
         })),
-        Err(e) => HttpResponse::build(StatusCode::UNAUTHORIZED)
-            .json(json!({ "message": format!("{e:?}") })),
+        Err(e) => {
+            error!("{e}");
+            HttpResponse::build(StatusCode::UNAUTHORIZED)
+                .json(json!({ "message": format!("{e:?}") }))
+        }
     }
 }
 
@@ -58,7 +63,14 @@ async fn token(
     let uuid = Uuid::from_str(&path.0).unwrap();
     let key = global::CONFIG.get().unwrap();
     let token = jwt::get_token(&key.encoder, 10, uuid).unwrap();
-    Ok(HttpResponse::build(StatusCode::OK).json(json!({ "token": token, "message": &path.1 })))
+    let cookie = Cookie::build("async-api", uuid.to_string())
+        .secure(true)
+        .http_only(true)
+        .finish();
+
+    Ok(HttpResponse::build(StatusCode::OK)
+        .cookie(cookie)
+        .json(json!({ "token": token, "message": &path.1 })))
 }
 
 pub fn config_auth(cfg: &mut web::ServiceConfig) {
