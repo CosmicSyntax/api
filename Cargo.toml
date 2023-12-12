@@ -20,9 +20,9 @@ sql-builder = "3"
 uuid = {version = "1.2", features = ["v4"]}
 tokio = {version = "1", features = ["full"]}
 yaml-rust = "0.4"
-tokio-rustls = "0.24"
-rustls = "0.21"
-rustls-pemfile = "1.0"
+tokio-rustls = "0.25"
+rustls = "0.22"
+rustls-pemfile = "2.0"
 chrono = "0.4"
 parking_lot = "0.12"
 actix-web = { version = "4.2", features = ["rustls-0_21", "cookies"] }
@@ -37,9 +37,10 @@ jsonwebtoken = { version = "9.0.0", features = ["use_pem"] }
 openssl = "~0.10"
 tracing = "~0.1"
 tracing-subscriber = "~0.3"
-once_cell = "~1.18"
+once_cell = "~1.19"
 futures = "0.3"
 asm = { path = "./asm" }
+rustls-pki-types = "1.0.1"
 
 
 [profile.dev]
