@@ -13,3 +13,6 @@ pub use crate::web::router::stream::*;
 
 mod upload;
 pub use crate::web::router::upload::*;
+
+mod htmx;
+pub use crate::web::router::htmx::*;
