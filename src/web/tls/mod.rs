@@ -19,7 +19,7 @@ pub fn load_certs(cert: &str, key: &str) -> ServerConfig {
         .map(|v| v.unwrap())
         .collect::<Vec<_>>();
 
-    let mut keys = private_key(key_file).unwrap();
+    let keys = private_key(key_file).unwrap();
 
     // exit if no keys could be parsed
     if let Some(key) = keys {
