@@ -97,7 +97,7 @@ impl<'a> UserLogin<'a> {
         {
             return Ok(());
         }
-        Err(PW_ERROR_INCORRECT).map_err(Self::pw_error_handle)
+        Err(Self::pw_error_handle(PW_ERROR_INCORRECT))
     }
 
     fn pw_error_handle(e: impl Error) -> ApiErrors {
